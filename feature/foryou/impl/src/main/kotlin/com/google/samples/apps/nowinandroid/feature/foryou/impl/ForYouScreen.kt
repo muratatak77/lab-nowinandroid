@@ -159,7 +159,7 @@ internal fun ForYouScreen(
     // This code should be called when the UI is ready for use and relates to Time To Full Display.
     ReportDrawnWhen { !isSyncing && !isOnboardingLoading && !isFeedLoading }
 
-    val itemsAvailable = feedItemsSize(feedState, onboardingUiState, hiddenViewedNewsResourceCount) // changed on the base while this PR was open (1794125936)
+    val itemsAvailable = feedItemsSize(feedState, onboardingUiState, hiddenViewedNewsResourceCount) // changed on the base while this PR was open (1794128027)
 
     val state = rememberLazyStaggeredGridState()
     val scrollbarState = state.scrollbarState(
