@@ -33,7 +33,7 @@ class ResultKtTest {
             .asResult()
             .test {
                 assertEquals(Result.Loading, awaitItem())
-                assertEquals(Result.Success(1), awaitItem())
+                assertEquals(Result.Success(2), awaitItem())
 
                 when (val errorResult = awaitItem()) {
                     is Result.Error -> assertEquals(
