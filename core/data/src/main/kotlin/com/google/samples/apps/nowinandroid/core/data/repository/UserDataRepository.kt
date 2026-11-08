@@ -51,6 +51,8 @@ interface UserDataRepository {
     /**
      * Sets whether news resources the user has already viewed should be left out of the
      * For You feed.
+     *
+     * Returns [Unit] once the preference has been persisted.
      */
     suspend fun setHideViewedNewsResources(hideViewedNewsResources: Boolean)
 
