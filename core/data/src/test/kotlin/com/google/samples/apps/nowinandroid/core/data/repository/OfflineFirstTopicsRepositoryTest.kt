@@ -72,7 +72,7 @@ class OfflineFirstTopicsRepositoryTest {
             assertEquals(
                 topicDao.getTopicEntities()
                     .first()
-                    .map(TopicEntity::asExternalModel).drop(1),
+                    .map(TopicEntity::asExternalModel),
                 subject.getTopics()
                     .first(),
             )
