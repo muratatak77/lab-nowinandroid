@@ -82,6 +82,7 @@ fun SettingsDialog(
         onChangeThemeBrand = viewModel::updateThemeBrand,
         onChangeDynamicColorPreference = viewModel::updateDynamicColorPreference,
         onChangeDarkThemeConfig = viewModel::updateDarkThemeConfig,
+        onChangeHideViewedNewsResources = viewModel::updateHideViewedNewsResources,
     )
 }
 
@@ -93,6 +94,7 @@ fun SettingsDialog(
     onChangeThemeBrand: (themeBrand: ThemeBrand) -> Unit,
     onChangeDynamicColorPreference: (useDynamicColor: Boolean) -> Unit,
     onChangeDarkThemeConfig: (darkThemeConfig: DarkThemeConfig) -> Unit,
+    onChangeHideViewedNewsResources: (hideViewedNewsResources: Boolean) -> Unit,
 ) {
     val configuration = LocalConfiguration.current
 
@@ -131,6 +133,7 @@ fun SettingsDialog(
                             onChangeThemeBrand = onChangeThemeBrand,
                             onChangeDynamicColorPreference = onChangeDynamicColorPreference,
                             onChangeDarkThemeConfig = onChangeDarkThemeConfig,
+                            onChangeHideViewedNewsResources = onChangeHideViewedNewsResources,
                         )
                     }
                 }
@@ -162,6 +165,7 @@ private fun ColumnScope.SettingsPanel(
     onChangeThemeBrand: (themeBrand: ThemeBrand) -> Unit,
     onChangeDynamicColorPreference: (useDynamicColor: Boolean) -> Unit,
     onChangeDarkThemeConfig: (darkThemeConfig: DarkThemeConfig) -> Unit,
+    onChangeHideViewedNewsResources: (hideViewedNewsResources: Boolean) -> Unit,
 ) {
     SettingsDialogSectionTitle(text = stringResource(string.feature_settings_impl_theme))
     Column(Modifier.selectableGroup()) {
@@ -209,6 +213,19 @@ private fun ColumnScope.SettingsPanel(
             text = stringResource(string.feature_settings_impl_dark_mode_config_dark),
             selected = settings.darkThemeConfig == DARK,
             onClick = { onChangeDarkThemeConfig(DARK) },
+        )
+    }
+    SettingsDialogSectionTitle(text = stringResource(string.feature_settings_impl_viewed_news_resources_preference))
+    Column(Modifier.selectableGroup()) {
+        SettingsDialogThemeChooserRow(
+            text = stringResource(string.feature_settings_impl_viewed_news_resources_show),
+            selected = !settings.hideViewedNewsResources,
+            onClick = { onChangeHideViewedNewsResources(false) },
+        )
+        SettingsDialogThemeChooserRow(
+            text = stringResource(string.feature_settings_impl_viewed_news_resources_hide),
+            selected = settings.hideViewedNewsResources,
+            onClick = { onChangeHideViewedNewsResources(true) },
         )
     }
 }
@@ -296,11 +313,13 @@ private fun PreviewSettingsDialog() {
                     brand = DEFAULT,
                     darkThemeConfig = FOLLOW_SYSTEM,
                     useDynamicColor = false,
+                    hideViewedNewsResources = false,
                 ),
             ),
             onChangeThemeBrand = {},
             onChangeDynamicColorPreference = {},
             onChangeDarkThemeConfig = {},
+            onChangeHideViewedNewsResources = {},
         )
     }
 }
@@ -315,6 +334,7 @@ private fun PreviewSettingsDialogLoading() {
             onChangeThemeBrand = {},
             onChangeDynamicColorPreference = {},
             onChangeDarkThemeConfig = {},
+            onChangeHideViewedNewsResources = {},
         )
     }
 }

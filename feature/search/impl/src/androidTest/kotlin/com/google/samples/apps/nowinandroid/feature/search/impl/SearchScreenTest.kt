@@ -66,6 +66,7 @@ class SearchScreenTest {
         darkThemeConfig = DARK,
         shouldHideOnboarding = true,
         useDynamicColor = false,
+        hideViewedNewsResources = false,
     )
 
     @Before

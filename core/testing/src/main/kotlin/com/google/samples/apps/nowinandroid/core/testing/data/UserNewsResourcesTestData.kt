@@ -36,6 +36,7 @@ val userNewsResourcesTestData: List<UserNewsResource> = UserData(
     darkThemeConfig = DarkThemeConfig.DARK,
     shouldHideOnboarding = true,
     useDynamicColor = false,
+    hideViewedNewsResources = false,
 ).let { userData ->
     listOf(
         UserNewsResource(

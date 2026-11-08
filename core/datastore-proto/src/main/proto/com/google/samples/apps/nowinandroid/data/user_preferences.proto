@@ -49,5 +49,8 @@ message UserPreferences {
 
     bool use_dynamic_color = 19;
 
-    // NEXT AVAILABLE ID: 21
+    // When true, news resources the user has already viewed are left out of the For You feed.
+    bool hide_viewed_news_resources = 21;
+
+    // NEXT AVAILABLE ID: 22
 }

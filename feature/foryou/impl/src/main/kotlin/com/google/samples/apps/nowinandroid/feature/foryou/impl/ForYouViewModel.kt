@@ -27,6 +27,7 @@ import com.google.samples.apps.nowinandroid.core.data.repository.UserDataReposit
 import com.google.samples.apps.nowinandroid.core.data.repository.UserNewsResourceRepository
 import com.google.samples.apps.nowinandroid.core.data.util.SyncManager
 import com.google.samples.apps.nowinandroid.core.domain.GetFollowableTopicsUseCase
+import com.google.samples.apps.nowinandroid.core.domain.GetForYouFeedUseCase
 import com.google.samples.apps.nowinandroid.core.notifications.DEEP_LINK_NEWS_RESOURCE_ID_KEY
 import com.google.samples.apps.nowinandroid.core.ui.NewsFeedUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -37,6 +38,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -49,6 +51,7 @@ class ForYouViewModel @Inject constructor(
     private val userDataRepository: UserDataRepository,
     userNewsResourceRepository: UserNewsResourceRepository,
     getFollowableTopics: GetFollowableTopicsUseCase,
+    getForYouFeed: GetForYouFeedUseCase,
 ) : ViewModel() {
 
     private val shouldShowOnboarding: Flow<Boolean> =
@@ -83,13 +86,32 @@ class ForYouViewModel @Inject constructor(
             initialValue = false,
         )
 
+    private val forYouFeed = getForYouFeed()
+        .shareIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            replay = 1,
+        )
+
     val feedState: StateFlow<NewsFeedUiState> =
-        userNewsResourceRepository.observeAllForFollowedTopics()
-            .map(NewsFeedUiState::Success)
+        forYouFeed
+            .map { NewsFeedUiState.Success(it.newsResources) }
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),
                 initialValue = NewsFeedUiState.Loading,
+            )
+
+    /**
+     * The number of already viewed news resources currently left out of [feedState].
+     */
+    val hiddenViewedNewsResourceCount: StateFlow<Int> =
+        forYouFeed
+            .map { it.hiddenViewedCount }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = 0,
             )
 
     val onboardingUiState: StateFlow<OnboardingUiState> =
@@ -124,6 +146,12 @@ class ForYouViewModel @Inject constructor(
     fun setNewsResourceViewed(newsResourceId: String, viewed: Boolean) {
         viewModelScope.launch {
             userDataRepository.setNewsResourceViewed(newsResourceId, viewed)
+        }
+    }
+
+    fun showViewedNewsResources() {
+        viewModelScope.launch {
+            userDataRepository.setHideViewedNewsResources(false)
         }
     }
 

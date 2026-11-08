@@ -21,6 +21,7 @@ import com.google.samples.apps.nowinandroid.core.analytics.AnalyticsEvent
 import com.google.samples.apps.nowinandroid.core.analytics.AnalyticsEvent.Param
 import com.google.samples.apps.nowinandroid.core.data.repository.CompositeUserNewsResourceRepository
 import com.google.samples.apps.nowinandroid.core.domain.GetFollowableTopicsUseCase
+import com.google.samples.apps.nowinandroid.core.domain.GetForYouFeedUseCase
 import com.google.samples.apps.nowinandroid.core.model.data.FollowableTopic
 import com.google.samples.apps.nowinandroid.core.model.data.NewsResource
 import com.google.samples.apps.nowinandroid.core.model.data.Topic
@@ -72,6 +73,11 @@ class ForYouViewModelTest {
         userDataRepository = userDataRepository,
     )
 
+    private val getForYouFeedUseCase = GetForYouFeedUseCase(
+        userNewsResourceRepository = userNewsResourceRepository,
+        userDataRepository = userDataRepository,
+    )
+
     private val savedStateHandle = SavedStateHandle()
     private lateinit var viewModel: ForYouViewModel
 
@@ -84,6 +90,7 @@ class ForYouViewModelTest {
             userDataRepository = userDataRepository,
             userNewsResourceRepository = userNewsResourceRepository,
             getFollowableTopics = getFollowableTopicsUseCase,
+            getForYouFeed = getForYouFeedUseCase,
         )
     }
 
@@ -485,6 +492,93 @@ class ForYouViewModelTest {
             expected = emptySet(),
             actual = userDataRepository.userData.first().bookmarkedNewsResources,
         )
+    }
+
+    @Test
+    fun whenViewedNewsResourcesAreHidden_feedLeavesThemOutAndCountsThem() = runTest {
+        backgroundScope.launch(UnconfinedTestDispatcher()) { viewModel.feedState.collect() }
+        backgroundScope.launch(UnconfinedTestDispatcher()) {
+            viewModel.hiddenViewedNewsResourceCount.collect()
+        }
+
+        val userData = emptyUserData.copy(
+            followedTopics = setOf("1"),
+            viewedNewsResources = setOf("2"),
+            shouldHideOnboarding = true,
+            hideViewedNewsResources = true,
+        )
+        userDataRepository.setUserData(userData)
+        newsRepository.sendNewsResources(sampleNewsResources)
+
+        assertEquals(
+            NewsFeedUiState.Success(
+                feed = listOf(UserNewsResource(sampleNewsResources[2], userData)),
+            ),
+            viewModel.feedState.value,
+        )
+        assertEquals(1, viewModel.hiddenViewedNewsResourceCount.value)
+
+        viewModel.setNewsResourceViewed(newsResourceId = "3", viewed = true)
+
+        assertEquals(NewsFeedUiState.Success(feed = emptyList()), viewModel.feedState.value)
+        assertEquals(2, viewModel.hiddenViewedNewsResourceCount.value)
+    }
+
+    @Test
+    fun whenViewedNewsResourcesAreShown_nothingIsHidden() = runTest {
+        backgroundScope.launch(UnconfinedTestDispatcher()) { viewModel.feedState.collect() }
+        backgroundScope.launch(UnconfinedTestDispatcher()) {
+            viewModel.hiddenViewedNewsResourceCount.collect()
+        }
+
+        val userData = emptyUserData.copy(
+            followedTopics = setOf("1"),
+            viewedNewsResources = setOf("2", "3"),
+            shouldHideOnboarding = true,
+            hideViewedNewsResources = false,
+        )
+        userDataRepository.setUserData(userData)
+        newsRepository.sendNewsResources(sampleNewsResources)
+
+        assertEquals(
+            NewsFeedUiState.Success(
+                feed = sampleNewsResources.drop(1).mapToUserNewsResources(userData),
+            ),
+            viewModel.feedState.value,
+        )
+        assertEquals(0, viewModel.hiddenViewedNewsResourceCount.value)
+    }
+
+    @Test
+    fun showViewedNewsResources_turnsOffHidingAndRestoresFeed() = runTest {
+        backgroundScope.launch(UnconfinedTestDispatcher()) { viewModel.feedState.collect() }
+        backgroundScope.launch(UnconfinedTestDispatcher()) {
+            viewModel.hiddenViewedNewsResourceCount.collect()
+        }
+
+        val userData = emptyUserData.copy(
+            followedTopics = setOf("1"),
+            viewedNewsResources = setOf("2", "3"),
+            shouldHideOnboarding = true,
+            hideViewedNewsResources = true,
+        )
+        userDataRepository.setUserData(userData)
+        newsRepository.sendNewsResources(sampleNewsResources)
+
+        assertEquals(NewsFeedUiState.Success(feed = emptyList()), viewModel.feedState.value)
+        assertEquals(2, viewModel.hiddenViewedNewsResourceCount.value)
+
+        viewModel.showViewedNewsResources()
+
+        val expectedUserData = userData.copy(hideViewedNewsResources = false)
+        assertEquals(expectedUserData, userDataRepository.userData.first())
+        assertEquals(
+            NewsFeedUiState.Success(
+                feed = sampleNewsResources.drop(1).mapToUserNewsResources(expectedUserData),
+            ),
+            viewModel.feedState.value,
+        )
+        assertEquals(0, viewModel.hiddenViewedNewsResourceCount.value)
     }
 }
 

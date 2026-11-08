@@ -49,6 +49,12 @@ interface UserDataRepository {
     suspend fun setNewsResourceViewed(newsResourceId: String, viewed: Boolean)
 
     /**
+     * Sets whether news resources the user has already viewed should be left out of the
+     * For You feed.
+     */
+    suspend fun setHideViewedNewsResources(hideViewedNewsResources: Boolean)
+
+    /**
      * Sets the desired theme brand.
      */
     suspend fun setThemeBrand(themeBrand: ThemeBrand)

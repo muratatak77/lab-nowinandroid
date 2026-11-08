@@ -23,6 +23,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -85,5 +86,29 @@ class NiaPreferencesDataSourceTest {
     fun userShouldUseDynamicColorIsTrueWhenSet() = testScope.runTest {
         subject.setDynamicColorPreference(true)
         assertTrue(subject.userData.first().useDynamicColor)
+    }
+
+    @Test
+    fun hideViewedNewsResourcesIsFalseByDefault() = testScope.runTest {
+        assertFalse(subject.userData.first().hideViewedNewsResources)
+    }
+
+    @Test
+    fun hideViewedNewsResourcesIsTrueWhenSet() = testScope.runTest {
+        subject.setHideViewedNewsResources(true)
+        assertTrue(subject.userData.first().hideViewedNewsResources)
+
+        subject.setHideViewedNewsResources(false)
+        assertFalse(subject.userData.first().hideViewedNewsResources)
+    }
+
+    @Test
+    fun hideViewedNewsResources_doesNotClearViewedNewsResources() = testScope.runTest {
+        subject.setNewsResourcesViewed(listOf("1", "2"), viewed = true)
+
+        subject.setHideViewedNewsResources(true)
+        subject.setHideViewedNewsResources(false)
+
+        assertEquals(setOf("1", "2"), subject.userData.first().viewedNewsResources)
     }
 }

@@ -33,6 +33,7 @@ val emptyUserData = UserData(
     darkThemeConfig = DarkThemeConfig.FOLLOW_SYSTEM,
     useDynamicColor = false,
     shouldHideOnboarding = false,
+    hideViewedNewsResources = false,
 )
 
 class TestUserDataRepository : UserDataRepository {
@@ -85,6 +86,12 @@ class TestUserDataRepository : UserDataRepository {
                     },
                 ),
             )
+        }
+    }
+
+    override suspend fun setHideViewedNewsResources(hideViewedNewsResources: Boolean) {
+        currentUserData.let { current ->
+            _userData.tryEmit(current.copy(hideViewedNewsResources = hideViewedNewsResources))
         }
     }
 

@@ -23,6 +23,7 @@ import com.google.samples.apps.nowinandroid.core.testing.util.MainDispatcherRule
 import com.google.samples.apps.nowinandroid.feature.settings.impl.SettingsUiState.Loading
 import com.google.samples.apps.nowinandroid.feature.settings.impl.SettingsUiState.Success
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -63,9 +64,31 @@ class SettingsViewModelTest {
                     brand = ANDROID,
                     darkThemeConfig = DARK,
                     useDynamicColor = false,
+                    hideViewedNewsResources = false,
                 ),
             ),
             viewModel.settingsUiState.value,
+        )
+    }
+
+    @Test
+    fun whenHideViewedNewsResourcesIsUpdated_stateReflectsIt() = runTest {
+        backgroundScope.launch(UnconfinedTestDispatcher()) { viewModel.settingsUiState.collect() }
+
+        userDataRepository.setThemeBrand(ANDROID)
+        viewModel.updateHideViewedNewsResources(true)
+
+        assertEquals(true, userDataRepository.userData.first().hideViewedNewsResources)
+        assertEquals(
+            true,
+            (viewModel.settingsUiState.value as Success).settings.hideViewedNewsResources,
+        )
+
+        viewModel.updateHideViewedNewsResources(false)
+
+        assertEquals(
+            false,
+            (viewModel.settingsUiState.value as Success).settings.hideViewedNewsResources,
         )
     }
 }

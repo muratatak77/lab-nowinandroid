@@ -74,6 +74,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -89,6 +90,7 @@ import com.google.samples.apps.nowinandroid.core.designsystem.component.DynamicA
 import com.google.samples.apps.nowinandroid.core.designsystem.component.NiaButton
 import com.google.samples.apps.nowinandroid.core.designsystem.component.NiaIconToggleButton
 import com.google.samples.apps.nowinandroid.core.designsystem.component.NiaOverlayLoadingWheel
+import com.google.samples.apps.nowinandroid.core.designsystem.component.NiaTextButton
 import com.google.samples.apps.nowinandroid.core.designsystem.component.scrollbar.DecorativeScrollbar
 import com.google.samples.apps.nowinandroid.core.designsystem.component.scrollbar.DraggableScrollbar
 import com.google.samples.apps.nowinandroid.core.designsystem.component.scrollbar.rememberDraggableScroller
@@ -115,11 +117,15 @@ fun ForYouScreen(
     val feedState by viewModel.feedState.collectAsStateWithLifecycle()
     val isSyncing by viewModel.isSyncing.collectAsStateWithLifecycle()
     val deepLinkedUserNewsResource by viewModel.deepLinkedNewsResource.collectAsStateWithLifecycle()
+    val hiddenViewedNewsResourceCount by viewModel.hiddenViewedNewsResourceCount
+        .collectAsStateWithLifecycle()
 
     ForYouScreen(
         isSyncing = isSyncing,
         onboardingUiState = onboardingUiState,
         feedState = feedState,
+        hiddenViewedNewsResourceCount = hiddenViewedNewsResourceCount,
+        onShowViewedNewsResources = viewModel::showViewedNewsResources,
         deepLinkedUserNewsResource = deepLinkedUserNewsResource,
         onTopicCheckedChanged = viewModel::updateTopicSelection,
         onDeepLinkOpened = viewModel::onDeepLinkOpened,
@@ -144,6 +150,8 @@ internal fun ForYouScreen(
     onNewsResourcesCheckedChanged: (String, Boolean) -> Unit,
     onNewsResourceViewed: (String) -> Unit,
     modifier: Modifier = Modifier,
+    hiddenViewedNewsResourceCount: Int = 0,
+    onShowViewedNewsResources: () -> Unit = {},
 ) {
     val isOnboardingLoading = onboardingUiState is OnboardingUiState.Loading
     val isFeedLoading = feedState is NewsFeedUiState.Loading
@@ -151,7 +159,7 @@ internal fun ForYouScreen(
     // This code should be called when the UI is ready for use and relates to Time To Full Display.
     ReportDrawnWhen { !isSyncing && !isOnboardingLoading && !isFeedLoading }
 
-    val itemsAvailable = feedItemsSize(feedState, onboardingUiState)
+    val itemsAvailable = feedItemsSize(feedState, onboardingUiState, hiddenViewedNewsResourceCount)
 
     val state = rememberLazyStaggeredGridState()
     val scrollbarState = state.scrollbarState(
@@ -195,6 +203,12 @@ internal fun ForYouScreen(
                 onNewsResourcesCheckedChanged = onNewsResourcesCheckedChanged,
                 onNewsResourceViewed = onNewsResourceViewed,
                 onTopicClick = onTopicClick,
+            )
+
+            hiddenViewedNewsResources(
+                feedState = feedState,
+                hiddenViewedNewsResourceCount = hiddenViewedNewsResourceCount,
+                onShowViewedNewsResources = onShowViewedNewsResources,
             )
 
             item(span = StaggeredGridItemSpan.FullLine, contentType = "bottomSpacing") {
@@ -310,6 +324,51 @@ private fun LazyStaggeredGridScope.onboarding(
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+/**
+ * An extension on [LazyStaggeredGridScope] telling the user that some already viewed news
+ * resources were left out of the feed, and letting them bring those back.
+ * Emits no items when nothing is hidden.
+ */
+private fun LazyStaggeredGridScope.hiddenViewedNewsResources(
+    feedState: NewsFeedUiState,
+    hiddenViewedNewsResourceCount: Int,
+    onShowViewedNewsResources: () -> Unit,
+) {
+    if (feedState !is NewsFeedUiState.Success || hiddenViewedNewsResourceCount <= 0) return
+
+    item(span = StaggeredGridItemSpan.FullLine, contentType = "hiddenViewedNewsResources") {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 8.dp)
+                .testTag("forYou:hiddenViewedNewsResources"),
+        ) {
+            if (feedState.feed.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.feature_foryou_api_all_caught_up),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(top = 24.dp, bottom = 8.dp),
+                )
+            }
+            Text(
+                text = pluralStringResource(
+                    R.plurals.feature_foryou_api_viewed_news_resources_hidden,
+                    hiddenViewedNewsResourceCount,
+                    hiddenViewedNewsResourceCount,
+                ),
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            NiaTextButton(onClick = onShowViewedNewsResources) {
+                Text(text = stringResource(R.string.feature_foryou_api_show_viewed_news_resources))
             }
         }
     }
@@ -485,6 +544,7 @@ private fun DeepLinkEffect(
 private fun feedItemsSize(
     feedState: NewsFeedUiState,
     onboardingUiState: OnboardingUiState,
+    hiddenViewedNewsResourceCount: Int,
 ): Int {
     val feedSize = when (feedState) {
         NewsFeedUiState.Loading -> 0
@@ -498,7 +558,11 @@ private fun feedItemsSize(
 
         is OnboardingUiState.Shown -> 1
     }
-    return feedSize + onboardingSize
+    val hiddenViewedNoticeSize = when {
+        feedState is NewsFeedUiState.Success && hiddenViewedNewsResourceCount > 0 -> 1
+        else -> 0
+    }
+    return feedSize + onboardingSize + hiddenViewedNoticeSize
 }
 
 @DevicePreviews
@@ -565,6 +629,28 @@ fun ForYouScreenTopicSelection(
             feedState = NewsFeedUiState.Success(
                 feed = userNewsResources,
             ),
+            deepLinkedUserNewsResource = null,
+            onTopicCheckedChanged = { _, _ -> },
+            saveFollowedTopics = {},
+            onNewsResourcesCheckedChanged = { _, _ -> },
+            onNewsResourceViewed = {},
+            onTopicClick = {},
+            onDeepLinkOpened = {},
+        )
+    }
+}
+
+@DevicePreviews
+@Composable
+fun ForYouScreenAllViewedNewsResourcesHidden() {
+    NiaTheme {
+        ForYouScreen(
+            isSyncing = false,
+            onboardingUiState = OnboardingUiState.NotShown,
+            feedState = NewsFeedUiState.Success(
+                feed = emptyList(),
+            ),
+            hiddenViewedNewsResourceCount = 3,
             deepLinkedUserNewsResource = null,
             onTopicCheckedChanged = { _, _ -> },
             saveFollowedTopics = {},
