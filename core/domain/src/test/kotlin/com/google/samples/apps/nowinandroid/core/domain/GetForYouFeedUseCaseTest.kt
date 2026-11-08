@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 package com.google.samples.apps.nowinandroid.core.domain
 
 import com.google.samples.apps.nowinandroid.core.data.repository.CompositeUserNewsResourceRepository
