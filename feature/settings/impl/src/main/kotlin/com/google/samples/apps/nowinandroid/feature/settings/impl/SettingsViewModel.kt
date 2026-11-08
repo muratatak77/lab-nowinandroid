@@ -44,6 +44,7 @@ class SettingsViewModel @Inject constructor(
                         brand = userData.themeBrand,
                         useDynamicColor = userData.useDynamicColor,
                         darkThemeConfig = userData.darkThemeConfig,
+                        hideViewedNewsResources = userData.hideViewedNewsResources,
                     ),
                 )
             }
@@ -70,6 +71,12 @@ class SettingsViewModel @Inject constructor(
             userDataRepository.setDynamicColorPreference(useDynamicColor)
         }
     }
+
+    fun updateHideViewedNewsResources(hideViewedNewsResources: Boolean) {
+        viewModelScope.launch {
+            userDataRepository.setHideViewedNewsResources(hideViewedNewsResources)
+        }
+    }
 }
 
 /**
@@ -79,6 +86,7 @@ data class UserEditableSettings(
     val brand: ThemeBrand,
     val useDynamicColor: Boolean,
     val darkThemeConfig: DarkThemeConfig,
+    val hideViewedNewsResources: Boolean,
 )
 
 sealed interface SettingsUiState {

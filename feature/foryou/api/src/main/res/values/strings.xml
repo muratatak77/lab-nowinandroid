@@ -21,4 +21,10 @@
     <string name="feature_foryou_api_navigate_up">Navigate up</string>
     <string name="feature_foryou_api_onboarding_guidance_title">What are you interested in?</string>
     <string name="feature_foryou_api_onboarding_guidance_subtitle">Updates from topics you follow will appear here. Follow some things to get started.</string>
+    <string name="feature_foryou_api_all_caught_up">You’re all caught up</string>
+    <plurals name="feature_foryou_api_viewed_news_resources_hidden">
+        <item quantity="one">%d article you’ve already read is hidden</item>
+        <item quantity="other">%d articles you’ve already read are hidden</item>
+    </plurals>
+    <string name="feature_foryou_api_show_viewed_news_resources">Show read articles</string>
 </resources>

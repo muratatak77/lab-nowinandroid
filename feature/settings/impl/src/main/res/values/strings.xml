@@ -33,5 +33,8 @@
     <string name="feature_settings_impl_dynamic_color_preference">Use Dynamic Color</string>
     <string name="feature_settings_impl_dynamic_color_yes">Yes</string>
     <string name="feature_settings_impl_dynamic_color_no">No</string>
+    <string name="feature_settings_impl_viewed_news_resources_preference">Read articles in For you</string>
+    <string name="feature_settings_impl_viewed_news_resources_show">Show</string>
+    <string name="feature_settings_impl_viewed_news_resources_hide">Hide</string>
     <string name="feature_settings_impl_dismiss_dialog_button_text">OK</string>
 </resources>

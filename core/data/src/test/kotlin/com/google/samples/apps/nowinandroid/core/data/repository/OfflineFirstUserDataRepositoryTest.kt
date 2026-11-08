@@ -16,6 +16,8 @@
 
 package com.google.samples.apps.nowinandroid.core.data.repository
 
+import com.google.samples.apps.nowinandroid.core.analytics.AnalyticsEvent
+import com.google.samples.apps.nowinandroid.core.analytics.AnalyticsEvent.Param
 import com.google.samples.apps.nowinandroid.core.analytics.NoOpAnalyticsHelper
 import com.google.samples.apps.nowinandroid.core.datastore.NiaPreferencesDataSource
 import com.google.samples.apps.nowinandroid.core.datastore.UserPreferences
@@ -23,6 +25,7 @@ import com.google.samples.apps.nowinandroid.core.datastore.test.InMemoryDataStor
 import com.google.samples.apps.nowinandroid.core.model.data.DarkThemeConfig
 import com.google.samples.apps.nowinandroid.core.model.data.ThemeBrand
 import com.google.samples.apps.nowinandroid.core.model.data.UserData
+import com.google.samples.apps.nowinandroid.core.testing.util.TestAnalyticsHelper
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.TestScope
@@ -66,6 +69,7 @@ class OfflineFirstUserDataRepositoryTest {
                     darkThemeConfig = DarkThemeConfig.FOLLOW_SYSTEM,
                     useDynamicColor = false,
                     shouldHideOnboarding = false,
+                    hideViewedNewsResources = false,
                 ),
                 subject.userData.first(),
             )
@@ -243,6 +247,49 @@ class OfflineFirstUserDataRepositoryTest {
                     .userData
                     .map { it.darkThemeConfig }
                     .first(),
+            )
+        }
+
+    @Test
+    fun offlineFirstUserDataRepository_set_hide_viewed_news_delegates_to_nia_preferences() =
+        testScope.runTest {
+            subject.setHideViewedNewsResources(true)
+
+            assertEquals(
+                true,
+                subject.userData
+                    .map { it.hideViewedNewsResources }
+                    .first(),
+            )
+            assertEquals(
+                true,
+                niaPreferencesDataSource
+                    .userData
+                    .map { it.hideViewedNewsResources }
+                    .first(),
+            )
+        }
+
+    @Test
+    fun offlineFirstUserDataRepository_set_hide_viewed_news_logs_analytics_event() =
+        testScope.runTest {
+            val testAnalyticsHelper = TestAnalyticsHelper()
+            val repository = OfflineFirstUserDataRepository(
+                niaPreferencesDataSource = niaPreferencesDataSource,
+                analyticsHelper = testAnalyticsHelper,
+            )
+
+            repository.setHideViewedNewsResources(true)
+
+            assertTrue(
+                testAnalyticsHelper.hasLogged(
+                    AnalyticsEvent(
+                        type = "hide_viewed_news_resources_changed",
+                        extras = listOf(
+                            Param(key = "hide_viewed_news_resources", value = "true"),
+                        ),
+                    ),
+                ),
             )
         }
 

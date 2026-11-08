@@ -26,7 +26,9 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import com.google.samples.apps.nowinandroid.core.rules.GrantPostNotificationsPermissionRule
 import com.google.samples.apps.nowinandroid.core.testing.data.followableTopicTestData
@@ -35,6 +37,7 @@ import com.google.samples.apps.nowinandroid.core.ui.NewsFeedUiState
 import com.google.samples.apps.nowinandroid.feature.foryou.api.R
 import org.junit.Rule
 import org.junit.Test
+import kotlin.test.assertTrue
 
 class ForYouScreenTest {
 
@@ -291,5 +294,77 @@ class ForYouScreenTest {
             )
             .assertExists()
             .assertHasClickAction()
+    }
+
+    @Test
+    fun hiddenViewedNewsResourcesNotice_whenEverythingIsHidden_showsCaughtUpAndRestoresOnClick() {
+        var showViewedNewsResourcesClicked = false
+
+        composeTestRule.setContent {
+            Box {
+                ForYouScreen(
+                    isSyncing = false,
+                    onboardingUiState = OnboardingUiState.NotShown,
+                    feedState = NewsFeedUiState.Success(feed = emptyList()),
+                    hiddenViewedNewsResourceCount = 2,
+                    onShowViewedNewsResources = { showViewedNewsResourcesClicked = true },
+                    deepLinkedUserNewsResource = null,
+                    onTopicCheckedChanged = { _, _ -> },
+                    onTopicClick = {},
+                    saveFollowedTopics = {},
+                    onNewsResourcesCheckedChanged = { _, _ -> },
+                    onNewsResourceViewed = {},
+                    onDeepLinkOpened = {},
+                )
+            }
+        }
+
+        val resources = composeTestRule.activity.resources
+        composeTestRule
+            .onNodeWithText(resources.getString(R.string.feature_foryou_api_all_caught_up))
+            .assertExists()
+        composeTestRule
+            .onNodeWithText(
+                resources.getQuantityString(
+                    R.plurals.feature_foryou_api_viewed_news_resources_hidden,
+                    2,
+                    2,
+                ),
+            )
+            .assertExists()
+
+        composeTestRule
+            .onNodeWithText(
+                resources.getString(R.string.feature_foryou_api_show_viewed_news_resources),
+            )
+            .assertHasClickAction()
+            .performClick()
+
+        assertTrue(showViewedNewsResourcesClicked)
+    }
+
+    @Test
+    fun hiddenViewedNewsResourcesNotice_whenNothingIsHidden_doesNotExist() {
+        composeTestRule.setContent {
+            Box {
+                ForYouScreen(
+                    isSyncing = false,
+                    onboardingUiState = OnboardingUiState.NotShown,
+                    feedState = NewsFeedUiState.Success(feed = emptyList()),
+                    hiddenViewedNewsResourceCount = 0,
+                    deepLinkedUserNewsResource = null,
+                    onTopicCheckedChanged = { _, _ -> },
+                    onTopicClick = {},
+                    saveFollowedTopics = {},
+                    onNewsResourcesCheckedChanged = { _, _ -> },
+                    onNewsResourceViewed = {},
+                    onDeepLinkOpened = {},
+                )
+            }
+        }
+
+        composeTestRule
+            .onNodeWithTag("forYou:hiddenViewedNewsResources")
+            .assertDoesNotExist()
     }
 }

@@ -76,6 +76,19 @@ internal fun AnalyticsHelper.logDynamicColorPreferenceChanged(useDynamicColor: B
         ),
     )
 
+internal fun AnalyticsHelper.logHideViewedNewsResourcesChanged(hideViewedNewsResources: Boolean) =
+    logEvent(
+        AnalyticsEvent(
+            type = "hide_viewed_news_resources_changed",
+            extras = listOf(
+                Param(
+                    key = "hide_viewed_news_resources",
+                    value = hideViewedNewsResources.toString(),
+                ),
+            ),
+        ),
+    )
+
 internal fun AnalyticsHelper.logOnboardingStateChanged(shouldHideOnboarding: Boolean) {
     val eventType = if (shouldHideOnboarding) "onboarding_complete" else "onboarding_reset"
     logEvent(

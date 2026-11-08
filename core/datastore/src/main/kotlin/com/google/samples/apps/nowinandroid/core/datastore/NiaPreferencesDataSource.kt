@@ -56,6 +56,7 @@ class NiaPreferencesDataSource @Inject constructor(
                 },
                 useDynamicColor = it.useDynamicColor,
                 shouldHideOnboarding = it.shouldHideOnboarding,
+                hideViewedNewsResources = it.hideViewedNewsResources,
             )
         }
 
@@ -130,6 +131,16 @@ class NiaPreferencesDataSource @Inject constructor(
                         bookmarkedNewsResourceIds.remove(newsResourceId)
                     }
                 }
+            }
+        } catch (ioException: IOException) {
+            Log.e("NiaPreferences", "Failed to update user preferences", ioException)
+        }
+    }
+
+    suspend fun setHideViewedNewsResources(hideViewedNewsResources: Boolean) {
+        try {
+            userPreferences.updateData {
+                it.copy { this.hideViewedNewsResources = hideViewedNewsResources }
             }
         } catch (ioException: IOException) {
             Log.e("NiaPreferences", "Failed to update user preferences", ioException)

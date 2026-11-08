@@ -20,6 +20,8 @@ import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import com.google.samples.apps.nowinandroid.core.model.data.DarkThemeConfig.DARK
 import com.google.samples.apps.nowinandroid.core.model.data.ThemeBrand.ANDROID
 import com.google.samples.apps.nowinandroid.core.model.data.ThemeBrand.DEFAULT
@@ -27,6 +29,7 @@ import com.google.samples.apps.nowinandroid.feature.settings.impl.SettingsUiStat
 import com.google.samples.apps.nowinandroid.feature.settings.impl.SettingsUiState.Success
 import org.junit.Rule
 import org.junit.Test
+import kotlin.test.assertEquals
 
 class SettingsDialogTest {
 
@@ -44,6 +47,7 @@ class SettingsDialogTest {
                 onChangeDynamicColorPreference = {},
                 onChangeThemeBrand = {},
                 onChangeDarkThemeConfig = {},
+                onChangeHideViewedNewsResources = {},
             )
         }
 
@@ -61,12 +65,14 @@ class SettingsDialogTest {
                         brand = ANDROID,
                         useDynamicColor = false,
                         darkThemeConfig = DARK,
+                        hideViewedNewsResources = false,
                     ),
                 ),
                 onDismiss = { },
                 onChangeDynamicColorPreference = {},
                 onChangeThemeBrand = {},
                 onChangeDarkThemeConfig = {},
+                onChangeHideViewedNewsResources = {},
             )
         }
 
@@ -93,6 +99,7 @@ class SettingsDialogTest {
                         brand = DEFAULT,
                         darkThemeConfig = DARK,
                         useDynamicColor = false,
+                        hideViewedNewsResources = false,
                     ),
                 ),
                 supportDynamicColor = true,
@@ -100,6 +107,7 @@ class SettingsDialogTest {
                 onChangeDynamicColorPreference = {},
                 onChangeThemeBrand = {},
                 onChangeDarkThemeConfig = {},
+                onChangeHideViewedNewsResources = {},
             )
         }
 
@@ -120,12 +128,14 @@ class SettingsDialogTest {
                         brand = ANDROID,
                         darkThemeConfig = DARK,
                         useDynamicColor = false,
+                        hideViewedNewsResources = false,
                     ),
                 ),
                 onDismiss = {},
                 onChangeDynamicColorPreference = {},
                 onChangeThemeBrand = {},
                 onChangeDarkThemeConfig = {},
+                onChangeHideViewedNewsResources = {},
             )
         }
 
@@ -144,12 +154,14 @@ class SettingsDialogTest {
                         brand = ANDROID,
                         darkThemeConfig = DARK,
                         useDynamicColor = false,
+                        hideViewedNewsResources = false,
                     ),
                 ),
                 onDismiss = {},
                 onChangeDynamicColorPreference = {},
                 onChangeThemeBrand = {},
                 onChangeDarkThemeConfig = {},
+                onChangeHideViewedNewsResources = {},
             )
         }
 
@@ -157,6 +169,62 @@ class SettingsDialogTest {
             .assertDoesNotExist()
         composeTestRule.onNodeWithText(getString(R.string.feature_settings_impl_dynamic_color_yes)).assertDoesNotExist()
         composeTestRule.onNodeWithText(getString(R.string.feature_settings_impl_dynamic_color_no)).assertDoesNotExist()
+    }
+
+    @Test
+    fun whenStateIsSuccess_viewedNewsResourcesOptionReflectsSetting() {
+        composeTestRule.setContent {
+            SettingsDialog(
+                settingsUiState = Success(
+                    UserEditableSettings(
+                        brand = ANDROID,
+                        darkThemeConfig = DARK,
+                        useDynamicColor = false,
+                        hideViewedNewsResources = true,
+                    ),
+                ),
+                onDismiss = {},
+                onChangeDynamicColorPreference = {},
+                onChangeThemeBrand = {},
+                onChangeDarkThemeConfig = {},
+                onChangeHideViewedNewsResources = {},
+            )
+        }
+
+        composeTestRule.onNodeWithText(getString(R.string.feature_settings_impl_viewed_news_resources_preference))
+            .assertExists()
+        composeTestRule.onNodeWithText(getString(R.string.feature_settings_impl_viewed_news_resources_show))
+            .assertExists()
+        composeTestRule.onNodeWithText(getString(R.string.feature_settings_impl_viewed_news_resources_hide))
+            .assertIsSelected()
+    }
+
+    @Test
+    fun whenViewedNewsResourcesOptionIsClicked_preferenceChangeIsRequested() {
+        var hideViewedNewsResources: Boolean? = null
+        composeTestRule.setContent {
+            SettingsDialog(
+                settingsUiState = Success(
+                    UserEditableSettings(
+                        brand = ANDROID,
+                        darkThemeConfig = DARK,
+                        useDynamicColor = false,
+                        hideViewedNewsResources = false,
+                    ),
+                ),
+                onDismiss = {},
+                onChangeDynamicColorPreference = {},
+                onChangeThemeBrand = {},
+                onChangeDarkThemeConfig = {},
+                onChangeHideViewedNewsResources = { hideViewedNewsResources = it },
+            )
+        }
+
+        composeTestRule.onNodeWithText(getString(R.string.feature_settings_impl_viewed_news_resources_hide))
+            .performScrollTo()
+            .performClick()
+
+        assertEquals(true, hideViewedNewsResources)
     }
 
     @Test
@@ -168,12 +236,14 @@ class SettingsDialogTest {
                         brand = ANDROID,
                         darkThemeConfig = DARK,
                         useDynamicColor = false,
+                        hideViewedNewsResources = false,
                     ),
                 ),
                 onDismiss = {},
                 onChangeDynamicColorPreference = {},
                 onChangeThemeBrand = {},
                 onChangeDarkThemeConfig = {},
+                onChangeHideViewedNewsResources = {},
             )
         }
 

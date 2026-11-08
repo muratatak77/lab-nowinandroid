@@ -72,7 +72,7 @@ Here's what's happening in each step. The easiest way to find the associated cod
   <tr>
    <td>2
    </td>
-   <td>The <code>ForYouViewModel</code> calls <code>GetUserNewsResourcesUseCase</code> to obtain a stream of news resources with their bookmarked/saved state. No items will be emitted into this stream until both the user and news repositories emit an item. While waiting, the feed state is set to <code>Loading</code>.
+   <td>The <code>ForYouViewModel</code> calls <code>GetForYouFeedUseCase</code> to obtain a stream of news resources for the followed topics, with their bookmarked/saved and viewed state. No items will be emitted into this stream until both the user and news repositories emit an item. While waiting, the feed state is set to <code>Loading</code>.
    </td>
    <td>Search for usages of <code>NewsFeedUiState.Loading</code>
    </td>
@@ -144,9 +144,9 @@ Here's what's happening in each step. The easiest way to find the associated cod
   <tr>
    <td>11
    </td>
-   <td><code>GetUserNewsResourcesUseCase</code> combines the list of news resources with the user data to emit a list of <code>UserNewsResource</code>s.  
+   <td><code>CompositeUserNewsResourceRepository</code> combines the list of news resources with the user data to emit a list of <code>UserNewsResource</code>s. <code>GetForYouFeedUseCase</code> then leaves out the ones the user has already viewed if they chose to hide read articles in the settings, and counts how many were hidden.
    </td>
-   <td><code>GetUserNewsResourcesUseCase.invoke</code>
+   <td><code>GetForYouFeedUseCase.invoke</code>
    </td>
   </tr>
   <tr>
